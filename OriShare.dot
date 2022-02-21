@@ -1,0 +1,21 @@
+strict digraph {
+  constructor
+  invest [color=purple]
+  transferFrom
+  transfer
+  push
+  setPlayer
+  getShare
+  getBalance
+  claimShare [color=purple]
+  removeInvestor [color=gray]
+  pop
+  _msgSender [color=gray]
+  invest -> transferFrom
+  invest -> transfer
+  invest -> push
+  claimShare -> transfer
+  claimShare -> removeInvestor
+  removeInvestor -> pop
+}
+
