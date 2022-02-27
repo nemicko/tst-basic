@@ -17,6 +17,7 @@ class Tangible {
     holdings: Map<number, string> = new Map<number, string>();
     duration: Map<string, number> = new Map<string, number>();
 
+
     offers: Array<{
         price: number,
         amount: number,
