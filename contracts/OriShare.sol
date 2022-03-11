@@ -243,6 +243,7 @@ contract OriShare is TangibleStakeToken {
 		_ori.transferFrom(_msgSender(), address(this), amount);
 		balance += amount;
 
+
 		return true;
 	}
 
@@ -256,18 +257,14 @@ contract OriShare is TangibleStakeToken {
 		_ori.transfer(_msgSender(), price * amount);
 
 		// book shares
-		shares[_msgSender()] -= amount;
+		updateShares(_msgSender(), amount);
 
-		// remove shareholder if == 0
-		if (shares[_msgSender()] == 0){
-			uint256 index = 0;
-			for(uint256 i=0;i<shareholders.length;i++){
-				if (shareholders[i] == _msgSender()){
-					index = i;
-				}
-			}
-			shareholders[index] = shareholders[shareholders.length-1];
-			shareholders.pop();
+		uint256 total = 0;
+		for(uint256 i=0;i<shareholders.length;i++)
+			total += shares[shareholders[i]];
+
+		for(uint256 i=0;i<shareholders.length;i++){
+			shares[shareholders[i]].amount += total;
 		}
 
 		// add to balance
@@ -277,15 +274,19 @@ contract OriShare is TangibleStakeToken {
 	}
 
 	// Terminate this contract, and pay-out all remaining investors
-	function terminate() public _isActive() {
+	function terminate() public _isActive() returns (bool) {
 		require(owner == msg.sender, 'Only owner can terminate');
 
 		uint256 price = getPrice();
 
+		// transfer to all their shares
 		for(uint256 i=0;i<shareholders.length;i++)
 			_ori.transfer(shareholders[i], shares[shareholders[i]] * price);
 
+
 		terminated = true;
+
+		return true;
 	}
 
 	// Get offers (open)
