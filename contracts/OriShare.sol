@@ -32,9 +32,12 @@ contract OriShare is TangibleStakeToken {
 	// initialized
 	bool initialized = false;
 
+	// initial value
+	uint256 initialValue = 0;
+
 	// Shares contributed to the player
-	uint constant tangibleTax = 5;
-	uint constant contributionTax = 10;
+	uint constant tangibleTax = 10;
+	uint constant contributionTax = 50;
 
 	// Address of the tangible
 	address tangibleAddress;
@@ -58,7 +61,7 @@ contract OriShare is TangibleStakeToken {
 	address[] shareholders;
 
 	// Set owner and DI OriToken
-	constructor(address oriTokenAddress) public {
+	constructor(address oriTokenAddress) {
 		owner = msg.sender;
 		_ori = OriToken(oriTokenAddress);
 	}
@@ -106,15 +109,16 @@ contract OriShare is TangibleStakeToken {
 		bool found = false;
 		for(uint256 i=0;i<shareholders.length;i++)
 			found = shareholders[i] == bidder || found;
+
 		if (!found)
 			shareholders.push(bidder);
 		shares[bidder] += amount;
 
 		// update from
-		if (shares[_msgSender()] == 0){
+		if (shares[from] == 0){
 			uint256 index = 0;
 			for(uint256 i=0;i<shareholders.length;i++){
-				if (shareholders[i] == _msgSender())
+				if (shareholders[i] == from)
 					index = i;
 			}
 			shareholders[index] = shareholders[shareholders.length-1];
@@ -139,6 +143,7 @@ contract OriShare is TangibleStakeToken {
 		// transfer funds
 		_ori.transferFrom(_msgSender(), address(this), amount);
 		balance = amount;
+		initialValue = amount;
 
 		shareholders.push(_msgSender());
 		shares[_msgSender()] = 100;
@@ -151,7 +156,8 @@ contract OriShare is TangibleStakeToken {
 
 	// Bid for shares
 	function bid(uint256 price, uint256 amount) public virtual override _isActive() returns (bool) {
-		require(amount > 0, 'Invalid amount provided');
+		require(amount > 0, 'Invalid amount submitted');
+		require(price > 0, 'Invalid price submitted');
 
 		// add tax to escrow
 		uint256 _escrow = price * amount;
@@ -198,7 +204,6 @@ contract OriShare is TangibleStakeToken {
 		uint256 tax = (totalCost * tangibleTax) / 100;
 		uint256 tangible = (tax * (100-contributionTax)) / 100;
 		uint256 contribution = tax - tangible;
-		uint256 payOut = totalCost;
 
 		// update offer
 		openOffers[bidder].escrow -= totalCost + tax;
@@ -243,38 +248,11 @@ contract OriShare is TangibleStakeToken {
 		_ori.transferFrom(_msgSender(), address(this), amount);
 		balance += amount;
 
-
-		return true;
-	}
-
-	// Claim shares (investor)
-	function claim(uint256 amount) public virtual override _isActive()  returns (bool) {
-		require(shares[_msgSender()] < amount, "Insufficient balance");
-
-		uint256 price = getPrice();
-
-		// transfer
-		_ori.transfer(_msgSender(), price * amount);
-
-		// book shares
-		updateShares(_msgSender(), amount);
-
-		uint256 total = 0;
-		for(uint256 i=0;i<shareholders.length;i++)
-			total += shares[shareholders[i]];
-
-		for(uint256 i=0;i<shareholders.length;i++){
-			shares[shareholders[i]].amount += total;
-		}
-
-		// add to balance
-		balance += amount * price;
-
 		return true;
 	}
 
 	// Terminate this contract, and pay-out all remaining investors
-	function terminate() public _isActive() returns (bool) {
+	function terminate() public override _isActive() returns (bool) {
 		require(owner == msg.sender, 'Only owner can terminate');
 
 		uint256 price = getPrice();
@@ -283,6 +261,12 @@ contract OriShare is TangibleStakeToken {
 		for(uint256 i=0;i<shareholders.length;i++)
 			_ori.transfer(shareholders[i], shares[shareholders[i]] * price);
 
+		// cancel bids
+		for(uint256 i=0;i<openBidders.length;i++){
+			_ori.transfer(openBidders[i], openOffers[openBidders[i]].escrow);
+			escrow -=  openOffers[openBidders[i]].escrow;
+			//updateOffers(_msgSender(), 0);
+		}
 
 		terminated = true;
 
@@ -314,6 +298,10 @@ contract OriShare is TangibleStakeToken {
 	// Return current price
 	function getPrice() public view returns (uint256) {
 		return balance / 100;
+	}
+
+	function getInitialValue() public view returns (uint256){
+		return initialValue;
 	}
 
 	// Get shareholder addresses

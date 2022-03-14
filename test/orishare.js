@@ -51,13 +51,13 @@ contract('OriShare', (accounts) => {
         const oriShare = await OriShare.deployed();
 
         // submit bid
-        const escrow = 1500000000 + (1500000000 * 0.05);
+        const escrow = 1500000000 + (1500000000 * 0.1);
         await oriToken.approve(oriShare.address, escrow, { from: accounts[2] });
         await oriShare.bid(30000000, 50, {from: accounts[2]});
 
         // tangible funds should increase
         const fundsTangible = (await oriToken.balanceOf.call(oriShare.address)).toNumber();
-        assert.equal(fundsTangible, 4575000000, "Invalid funds after bid");
+        assert.equal(fundsTangible, 4650000000, "Invalid funds after bid");
 
         const offers = await oriShare.getOffers.call();
         assert.equal(offers.length, 1, "Offer not stored");
@@ -74,16 +74,16 @@ contract('OriShare', (accounts) => {
 
         // check if root got funds back
         const fundsPlayer = (await oriToken.balanceOf(accounts[1])).toNumber();
-        assert.equal(fundsPlayer, 67500000, "Invalid funds on player after bid");
+        assert.equal(fundsPlayer, 75000000, "Invalid funds on player after bid");
 
         const fundsTangible = (await oriToken.balanceOf.call(oriShare.address)).toNumber();
-        assert.equal(fundsTangible, 3007500000, "Invalid funds on tangible after accept");
+        assert.equal(fundsTangible, 3075000000, "Invalid funds on tangible after accept");
 
         const balance = (await oriShare.getBalance.call()).toNumber();
         assert.equal(fundsTangible, balance, "Funds and balance should be same");
 
         const price = (await oriShare.getPrice.call()).toNumber();
-        assert.equal(price, 30075000, "Invalid price, in PreSale phase");
+        assert.equal(price, 30750000, "Invalid price, in PreSale phase");
 
         const share = (await oriShare.getShare.call(accounts[2])).toNumber();
         assert.equal(share, 50, "Invalid share of staker");
@@ -114,11 +114,11 @@ contract('OriShare', (accounts) => {
 
         // tangible funds should increase
         const fundsTangible = (await oriToken.balanceOf.call(oriShare.address)).toNumber();
-        assert.equal(fundsTangible, 5691693750, "Invalid funds after bid");
+        assert.equal(fundsTangible, 5950125000, "Invalid funds after bid");
 
         const offers = await oriShare.getOffers.call();
         assert.equal(offers.length, 4, "Offer not stored");
-        assert.equal(offers[3].price, 15037500, "Offer has invalid price");
+        assert.equal(offers[3].price, 15375000, "Offer has invalid price");
     })
 
     it('Accept bids', async () => {
@@ -140,7 +140,7 @@ contract('OriShare', (accounts) => {
             fundsPlayer = (await oriToken.balanceOf.call(accounts[1])).toNumber();
             earningOnwer += ((await oriToken.balanceOf.call(accounts[0])).toNumber() - fundsOwner);
             fundsOwner = (await oriToken.balanceOf.call(accounts[0])).toNumber();
-            assert.equal(fundsPlayer, 94567500, "Invalid tax paid to player");
+            assert.equal(fundsPlayer, 105750000, "Invalid tax paid to player");
 
         await oriShare.accept(offers[1].from, 10, { from: accounts[0] });
 
@@ -149,7 +149,7 @@ contract('OriShare', (accounts) => {
             fundsPlayer = (await oriToken.balanceOf.call(accounts[1])).toNumber();
             earningOnwer += ((await oriToken.balanceOf.call(accounts[0])).toNumber() - fundsOwner);
             fundsOwner = (await oriToken.balanceOf.call(accounts[0])).toNumber();
-            assert.equal(fundsPlayer, 114868125, "Invalid tax paid to player");
+            assert.equal(fundsPlayer, 128812500, "Invalid tax paid to player");
 
         await oriShare.accept(offers[2].from, 20, { from: accounts[0] });
 
@@ -158,7 +158,7 @@ contract('OriShare', (accounts) => {
             fundsPlayer = (await oriToken.balanceOf(accounts[1])).toNumber();
             earningOnwer += ((await oriToken.balanceOf.call(accounts[0])).toNumber() - fundsOwner);
             fundsOwner = (await oriToken.balanceOf.call(accounts[0])).toNumber();
-            assert.equal(fundsPlayer, 169003125, "Invalid funds on player after bid");
+            assert.equal(fundsPlayer, 190312500, "Invalid funds on player after bid");
 
 
         fundsTangible = (await oriToken.balanceOf.call(accounts[0])).toNumber();
@@ -180,16 +180,16 @@ contract('OriShare', (accounts) => {
         await oriShare.accept(offers[0].from, 10, { from: accounts[2] });
 
         let fundsTangibleAfter = (await oriToken.balanceOf.call(oriShare.address)).toNumber();
-        assert.equal(fundsTangibleAfter, 3177423750, "Invalid funds on tangible");
+        assert.equal(fundsTangibleAfter, 3367125000, "Invalid funds on tangible");
 
         let fundsPlayerAfter = (await oriToken.balanceOf.call(accounts[1])).toNumber();
-        assert.equal(fundsPlayerAfter, 175770000, "Invalid funds on tangible");
+        assert.equal(fundsPlayerAfter, 198000000, "Invalid funds on tangible");
 
         let fundsOwnerAfter = (await oriToken.balanceOf.call(accounts[2])).toNumber();
-        assert.equal(fundsOwnerAfter, 38575375000, "Invalid funds on tangible");
+        assert.equal(fundsOwnerAfter, 38503750000, "Invalid funds on tangible");
 
         let valueAfter = (await oriShare.getBalance.call()).toNumber();
-        assert.equal(valueAfter, 3019530000, "Invalid funds on tangible");
+        assert.equal(valueAfter, 3198000000, "Invalid funds on tangible");
     });
 
     it('Cancel offer, and get escrow back', async () => {
@@ -207,7 +207,7 @@ contract('OriShare', (accounts) => {
         let fundsTangibleAfter = (await oriToken.balanceOf.call(oriShare.address)).toNumber();
         let fundsOwnerAfter = (await oriToken.balanceOf.call(accounts[6])).toNumber();
 
-        assert.equal(fundsTangibleAfter, 3019530000, "Escrow not returned");
+        assert.equal(fundsTangibleAfter, 3198000000, "Escrow not returned");
     });
 
     it('Disburse funds', async() => {
@@ -221,9 +221,9 @@ contract('OriShare', (accounts) => {
         const value = (await oriShare.getBalance.call()).toNumber();
         const price = (await oriShare.getPrice.call()).toNumber();
 
-        assert.equal(fundsTangibleAfter, 3119530000, "Disburse failed");
+        assert.equal(fundsTangibleAfter, 3298000000, "Disburse failed");
         assert.equal(fundsTangibleAfter, value, "Disburse failed");
-        assert.equal(price, 31195300, "Disburse failed");
+        assert.equal(price, 32980000, "Disburse failed");
     })
 
     it('Terminate Share', async () => {
@@ -261,7 +261,7 @@ const createBid = async (percent, price, address) => {
 
     // submit bid
     let escrow = price * percent;
-    escrow = escrow + (escrow * 0.05)
+    escrow = escrow + (escrow * 0.1)
     await oriToken.approve(oriShare.address, escrow, { from: address });
     await oriShare.bid(price, percent, {from: address});
 }
